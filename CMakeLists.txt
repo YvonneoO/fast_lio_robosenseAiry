@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(fast_lio)
+project(fast_lio_robosense)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
@@ -57,7 +57,7 @@ find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(visualization_msgs REQUIRED)
-find_package(pcl_ros REQUIRED)
+# pcl_ros is not needed in ROS2, PCL is used directly
 find_package(pcl_conversions REQUIRED)
 find_package(livox_ros_driver2 REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
@@ -71,7 +71,6 @@ set(dependencies
   std_msgs
   std_srvs
   visualization_msgs
-  pcl_ros
   pcl_conversions
   livox_ros_driver2
 )
