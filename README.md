@@ -1,67 +1,56 @@
 # FAST_LIO_RoboSense
 
-基于 FAST_LIO 的 ROS2 Humble 版本，支持 RoboSense Airy 雷达。
+ROS2 Humble version of FAST_LIO with support for RoboSense Airy LiDAR.
 
-## 功能特性
+## Features
 
-- ✅ 基于 FAST_LIO ROS2 Humble 版本
-- ✅ 支持 RoboSense Airy 雷达（lidar_type: 5）
-- ✅ 支持 RSM1 和 RSM1_BREAK 模式
-- ✅ 完整的 ROS2 参数配置
-- ✅ ROS2 launch 文件支持
+- ✅ Based on FAST_LIO ROS2 Humble version
+- ✅ Support for RoboSense Airy LiDAR (lidar_type: 5)
 
-## 依赖
+## Dependencies
 
 - ROS2 Humble
 - PCL
 - Eigen3
 - ikd-Tree (git submodule)
 
-## 安装
+## Installation
 
-1. 初始化 git 子模块：
+1. Initialize git submodule:
 ```bash
-cd /home/wang/workfiles/testbot_ws/src/fast_lio_robosense
-git submodule update --init --recursive
+cd src/fast_lio_robosense/include
+rm -rf ikd-Tree
+git clone --depth 1 --branch fast_lio https://github.com/hku-mars/ikd-Tree.git
 ```
 
-2. 编译：
+2. Build:
 ```bash
-cd /home/wang/workfiles/testbot_ws
 colcon build --packages-select fast_lio_robosense
 source install/setup.bash
 ```
 
-## 使用方法
+## Usage
 
-### 启动 RoboSense Airy 雷达建图
+### Launch RoboSense Airy LiDAR Mapping
 
 ```bash
 ros2 launch fast_lio_robosense mapping_robosense_airy.launch.py
 ```
 
-### 参数配置
+### Save Map
 
-配置文件位于 `config/robosenseAiry.yaml`，主要参数：
+```bash
+ros2 launch fast_lio_robosense mapping_robosense_airy.launch.py map_file_path:=/path/to/save/map.pcd
 
-- `preprocess.lidar_type: 5` - RoboSense Airy 雷达类型
-- `preprocess.scan_line: 96` - 扫描线数
-- `common.lid_topic: "/rslidar_points"` - 点云话题
-- `common.imu_topic: "/rslidar_imu_data"` - IMU 话题
+# In another terminal
+ros2 service call /map_save std_srvs/srv/Trigger
+```
 
-## 与原 fast_lio 包的区别
+### Parameter Configuration
 
-- 包名：`fast_lio_robosense`（避免与原包冲突）
-- 添加了 RoboSense M1/Airy 点类型支持
-- 添加了 `robosenseM1_handler` 处理函数
-- 支持点云字段兼容处理（自动检测是否有 ring 和 timestamp 字段）
+Configuration file is located at `config/robosenseAiry.yaml`. Main parameters:
 
-## 注意事项
-
-1. 原 `fast_lio` 包已被阻止编译（通过 COLCON_IGNORE），避免重名冲突
-2. 如果点云消息没有 `ring` 和 `timestamp` 字段，代码会自动使用标准 PointXYZI 格式处理
-3. 确保 ikd-Tree 子模块已正确初始化
-
-## Git 仓库
-
-本包包含独立的 git 仓库，位于 `src/fast_lio_robosense/`。
+- `preprocess.lidar_type: 5` - RoboSense Airy LiDAR type
+- `preprocess.scan_line: 96` - Number of scan lines
+- `common.lid_topic: "/rslidar_points"` - Point cloud topic
+- `common.imu_topic: "/rslidar_imu_data"` - IMU topic

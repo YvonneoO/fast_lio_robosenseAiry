@@ -42,12 +42,19 @@ def generate_launch_description():
         'rviz_cfg', default_value=default_rviz_config_path,
         description='RViz config file path'
     )
+    declare_map_file_path_cmd = DeclareLaunchArgument(
+        'map_file_path', default_value='',
+        description='Path to save the map PCD file'
+    )
+
+    map_file_path = LaunchConfiguration('map_file_path')
 
     fast_lio_node = Node(
         package='fast_lio_robosense',
         executable='fastlio_mapping',
         parameters=[PathJoinSubstitution([config_path, config_file]),
-                    {'use_sim_time': use_sim_time}],
+                    {'use_sim_time': use_sim_time,
+                     'map_file_path': map_file_path}],
         output='screen'
     )
     rviz_node = Node(
@@ -63,6 +70,7 @@ def generate_launch_description():
     ld.add_action(decalre_config_file_cmd)
     ld.add_action(declare_rviz_cmd)
     ld.add_action(declare_rviz_config_path_cmd)
+    ld.add_action(declare_map_file_path_cmd)
 
     ld.add_action(fast_lio_node)
     ld.add_action(rviz_node)

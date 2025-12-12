@@ -622,8 +622,32 @@ void publish_map(rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pub
 
 void save_to_pcd()
 {
+    if (ikdtree.Root_Node == nullptr)
+    {
+        std::cerr << "[ERROR] Cannot save map: ikdtree is empty!" << std::endl;
+        return;
+    }
+    
+    // Get all points from ikdtree
+    PointVector ().swap(ikdtree.PCL_Storage);
+    ikdtree.flatten(ikdtree.Root_Node, ikdtree.PCL_Storage, NOT_RECORD);
+    
+    // Convert to PCL point cloud
+    PointCloudXYZI::Ptr map_cloud(new PointCloudXYZI());
+    map_cloud->points = ikdtree.PCL_Storage;
+    map_cloud->width = map_cloud->points.size();
+    map_cloud->height = 1;
+    map_cloud->is_dense = false;
+    
+    if (map_cloud->points.size() == 0)
+    {
+        std::cerr << "[ERROR] Cannot save map: no points in ikdtree!" << std::endl;
+        return;
+    }
+    
     pcl::PCDWriter pcd_writer;
-    pcd_writer.writeBinary(map_file_path, *pcl_wait_pub);
+    pcd_writer.writeBinary(map_file_path, *map_cloud);
+    std::cout << "[INFO] Map saved successfully with " << map_cloud->points.size() << " points to " << map_file_path << std::endl;
 }
 
 template<typename T>
@@ -1133,17 +1157,25 @@ private:
 
     void map_save_callback(std_srvs::srv::Trigger::Request::ConstSharedPtr req, std_srvs::srv::Trigger::Response::SharedPtr res)
     {
+        if (map_file_path.empty())
+        {
+            res->success = false;
+            res->message = "Map file path is not set. Please set map_file_path parameter.";
+            RCLCPP_ERROR(this->get_logger(), "Map file path is not set!");
+            return;
+        }
+        
         RCLCPP_INFO(this->get_logger(), "Saving map to %s...", map_file_path.c_str());
         if (pcd_save_en)
         {
             save_to_pcd();
             res->success = true;
-            res->message = "Map saved.";
+            res->message = "Map saved successfully.";
         }
         else
         {
             res->success = false;
-            res->message = "Map save disabled.";
+            res->message = "Map save disabled. Please enable pcd_save.pcd_save_en in config file.";
         }
     }
 
