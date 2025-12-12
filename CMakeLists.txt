@@ -57,6 +57,9 @@ find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(visualization_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_eigen REQUIRED)
 # pcl_ros is not needed in ROS2, PCL is used directly
 find_package(pcl_conversions REQUIRED)
 find_package(livox_ros_driver2 REQUIRED)
@@ -71,6 +74,8 @@ set(dependencies
   std_msgs
   std_srvs
   visualization_msgs
+  tf2_ros
+  tf2_eigen
   pcl_conversions
   livox_ros_driver2
 )
