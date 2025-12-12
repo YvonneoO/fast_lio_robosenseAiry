@@ -48,6 +48,11 @@ class ImuProcess
   void set_acc_bias_cov(const V3D &b_a);
   Eigen::Matrix<double, 12, 12> Q;
   void Process(const MeasureGroup &meas,  esekfom::esekf<state_ikfom, 12, input_ikfom> &kf_state, PointCloudXYZI::Ptr pcl_un_);
+  void set_node_handler(const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pub)
+    {
+        odom_pub_ = pub;
+    }
+  void PublishOdometry(const state_ikfom &imu_state, double timestamp);
 
   ofstream fout_imu;
   V3D cov_acc;
@@ -79,6 +84,7 @@ class ImuProcess
   int    init_iter_num = 1;
   bool   b_first_frame_ = true;
   bool   imu_need_init_ = true;
+  rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;
 };
 
 ImuProcess::ImuProcess()
@@ -210,6 +216,36 @@ void ImuProcess::IMU_init(const MeasureGroup &meas, esekfom::esekf<state_ikfom, 
 
 }
 
+void ImuProcess::PublishOdometry(const state_ikfom &imu_state, double timestamp)
+{
+    if (!odom_pub_) return;
+    
+    nav_msgs::msg::Odometry odom_msg;
+    odom_msg.header.stamp = get_ros_time(timestamp);
+    odom_msg.header.frame_id = "camera_init";
+    odom_msg.child_frame_id = "body";
+
+    // 设置位置
+    odom_msg.pose.pose.position.x = imu_state.pos.x();
+    odom_msg.pose.pose.position.y = imu_state.pos.y();
+    odom_msg.pose.pose.position.z = imu_state.pos.z();
+
+    // 设置姿态
+    Eigen::Quaterniond q(imu_state.rot);
+    odom_msg.pose.pose.orientation.x = q.x();
+    odom_msg.pose.pose.orientation.y = q.y();
+    odom_msg.pose.pose.orientation.z = q.z();
+    odom_msg.pose.pose.orientation.w = q.w();
+
+    // 设置速度
+    odom_msg.twist.twist.linear.x = imu_state.vel.x();
+    odom_msg.twist.twist.linear.y = imu_state.vel.y();
+    odom_msg.twist.twist.linear.z = imu_state.vel.z();
+
+    // 发布里程计信息
+    odom_pub_->publish(odom_msg);
+}
+
 void ImuProcess::UndistortPcl(const MeasureGroup &meas, esekfom::esekf<state_ikfom, 12, input_ikfom> &kf_state, PointCloudXYZI &pcl_out)
 {
   /*** add the imu of the last frame-tail to the of current frame-head ***/
@@ -223,8 +259,8 @@ void ImuProcess::UndistortPcl(const MeasureGroup &meas, esekfom::esekf<state_ikf
   /*** sort point clouds by offset time ***/
   pcl_out = *(meas.lidar);
   sort(pcl_out.points.begin(), pcl_out.points.end(), time_list);
-  // cout<<"[ IMU Process ]: Process lidar from "<<pcl_beg_time<<" to "<<pcl_end_time<<", " \
-  //          <<meas.imu.size()<<" imu msgs from "<<imu_beg_time<<" to "<<imu_end_time<<endl;
+  std::cout<<"[ IMU Process ]: Process lidar from "<<pcl_beg_time<<" to "<<pcl_end_time<<", " \
+           <<meas.imu.size()<<" imu msgs from "<<imu_beg_time<<" to "<<imu_end_time<<std::endl;
 
   /*** Initialize IMU pose ***/
   state_ikfom imu_state = kf_state.get_x();
@@ -279,6 +315,10 @@ void ImuProcess::UndistortPcl(const MeasureGroup &meas, esekfom::esekf<state_ikf
 
     /* save the poses at each IMU measurements */
     imu_state = kf_state.get_x();
+    bool pub_imu_odom = true;
+    if(pub_imu_odom){
+        PublishOdometry(imu_state, tail_stamp);
+    }
     angvel_last = angvel_avr - imu_state.bg;
     acc_s_last  = imu_state.rot * (acc_avr - imu_state.ba);
     for(int i=0; i<3; i++)
