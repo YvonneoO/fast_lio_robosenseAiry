@@ -54,3 +54,7 @@ Configuration file is located at `config/robosenseAiry.yaml`. Main parameters:
 - `preprocess.scan_line: 96` - Number of scan lines
 - `common.lid_topic: "/rslidar_points"` - Point cloud topic
 - `common.imu_topic: "/rslidar_imu_data"` - IMU topic
+
+## Sample Effect
+<img width="1304" height="765" alt="图片" src="https://github.com/user-attachments/assets/5387aa39-e742-4ec1-b108-0adb5a838c18" />
+
