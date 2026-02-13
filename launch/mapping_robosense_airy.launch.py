@@ -43,7 +43,7 @@ def generate_launch_description():
         description='RViz config file path'
     )
     declare_map_file_path_cmd = DeclareLaunchArgument(
-        'map_file_path', default_value='',
+        'map_file_path', default_value='/home/cerlab/fast_lio_ws/src/fast_lio_robosenseAiry/PCD/test.pcd',
         description='Path to save the map PCD file'
     )
 
@@ -73,6 +73,6 @@ def generate_launch_description():
     ld.add_action(declare_map_file_path_cmd)
 
     ld.add_action(fast_lio_node)
-    ld.add_action(rviz_node)
+    # ld.add_action(rviz_node)
 
     return ld

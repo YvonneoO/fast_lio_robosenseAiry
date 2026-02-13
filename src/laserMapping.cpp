@@ -587,6 +587,7 @@ void publish_effect_world(rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::Shar
     }
     sensor_msgs::msg::PointCloud2 laserCloudFullRes3;
     pcl::toROSMsg(*laserCloudWorld, laserCloudFullRes3);
+    std::cout << "effective feature num: " << effct_feat_num << std::endl;
     laserCloudFullRes3.header.stamp = get_ros_time(lidar_end_time);
     laserCloudFullRes3.header.frame_id = "camera_init";
     pubLaserCloudEffect->publish(laserCloudFullRes3);
